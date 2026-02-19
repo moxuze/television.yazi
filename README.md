@@ -25,7 +25,7 @@ desc = "Edit a file via television"
 
 [[mgr.prepend_keymap]]
 on = "z"
-run = "plugin television -- zoxide-for-yazi --cd"
+run = "plugin television -- zoxide-query --cd"
 desc = "Jump to a file via zoxide in television"
 
 [[mgr.prepend_keymap]]
@@ -34,12 +34,12 @@ run = "plugin television -- files"
 desc = "Jump to a file via television"
 ```
 
-Then add this to your `~/.config/television/cable/zoxide-for-yazi.toml` (optional):
+Then add this to your `~/.config/television/cable/zoxide-query.toml` (optional):
 
 ```toml
 [metadata]
-name = "zoxide-for-yazi"
-description = "Browse zoxide directory history in yazi"
+name = "zoxide-query"
+description = "Query zoxide directory history"
 requirements = ["zoxide"]
 
 [source]
