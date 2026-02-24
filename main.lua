@@ -19,7 +19,13 @@ function M:entry(job)
   end
 
   local permit = ui.hide()
-  local target, err = M.run_tv(options.cable, cwd)
+  local target, err = M.run_tv(
+    options.tv,
+    options.tv_options,
+    options.cable,
+    cwd
+  )
+
   permit:drop()
 
   if not target then
@@ -89,6 +95,8 @@ function M.parse(args)
   end
 
   if args.text then
+    args.tv_no_remote = true
+    args.tv_keybindings='enter="confirm_selection"'
     args.pattern = "^(.+):(%d+)$"
     args.pattern_keys = "file,line"
     args.reveal = '{{file}}'
@@ -131,6 +139,28 @@ function M.parse(args)
     end
     result.reveal = args.reveal
   end
+
+  if args.tv then
+    if type(args.shell) ~= "string" then
+      return nil, Err("Invalid arugment `--tv` which is not a string")
+    end
+    result.tv = args.tv
+  else
+    result.tv = "tv"
+  end
+
+  local tv_options = {}
+  for k, v in pairs(args) do
+    if type(k) == "string" and k:sub(1, 3) == "tv_" then
+      local key = k:sub(4):gsub("_", "-")
+      if v == true then
+        table.insert(tv_options, "--" .. key)
+      else
+        table.insert(tv_options, "--" .. key .. "=" .. v)
+      end
+    end
+  end
+  result.tv_options = tv_options
 
   return result, nil
 end
@@ -188,7 +218,7 @@ function M.render(template, data, cwd)
   end))
 end
 
----@param file_name string
+---@param path string
 ---@param cwd Url
 ---@return Url
 function M.expand(path, cwd)
@@ -199,12 +229,19 @@ function M.expand(path, cwd)
   return url
 end
 
+---@param tv string
+---@param tv_options table
 ---@param cable string
 ---@param cwd Url
 ---@return string?, Error?
-function M.run_tv(cable, cwd)
-  local child, err = Command("tv")
-    :arg({ cable })
+function M.run_tv(tv, tv_options, cable, cwd)
+  local args = {}
+  for index, arg in ipairs(tv_options) do
+    table.insert(args, arg)
+  end
+  table.insert(args, cable)
+  local child, err = Command(tv)
+    :arg(args)
     :cwd(tostring(cwd))
     :stdin(Command.INHERIT)
     :stdout(Command.PIPED)
